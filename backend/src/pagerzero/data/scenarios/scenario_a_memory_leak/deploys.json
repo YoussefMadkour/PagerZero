@@ -1,0 +1,33 @@
+[
+  {
+    "timestamp": "2026-05-01T13:13:00Z",
+    "commit_sha": "abc123f",
+    "author": "alice@payco.network",
+    "message": "Optimized session caching for faster auth",
+    "files_changed": [
+      "src/com/payco/session/SessionCache.java",
+      "src/com/payco/session/SessionLifecycleHook.java"
+    ],
+    "diff_summary": "SessionCache.put: removed evict-on-expiry check. SessionLifecycleHook: removed cache.cleanup() call."
+  },
+  {
+    "timestamp": "2026-05-01T07:13:00Z",
+    "commit_sha": "9b2e4a1",
+    "author": "bob@payco.network",
+    "message": "Bump kotlin-stdlib 1.9.22 -> 1.9.24",
+    "files_changed": [
+      "build.gradle.kts"
+    ],
+    "diff_summary": "Patch version bump, no logic changes."
+  },
+  {
+    "timestamp": "2026-04-30T23:13:00Z",
+    "commit_sha": "4d77f02",
+    "author": "carol@payco.network",
+    "message": "Add structured logging to webhook handler",
+    "files_changed": [
+      "src/com/payco/webhook/WebhookHandler.java"
+    ],
+    "diff_summary": "Add SLF4J markers, no behavioral changes."
+  }
+]

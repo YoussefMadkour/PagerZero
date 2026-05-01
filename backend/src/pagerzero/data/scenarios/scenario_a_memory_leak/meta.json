@@ -1,0 +1,4 @@
+{
+  "service_name": "payment-service",
+  "alert_summary": "payment-service P99 latency > 4s, error rate 847% above baseline. Possible heap exhaustion."
+}
