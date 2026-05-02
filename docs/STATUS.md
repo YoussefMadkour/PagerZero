@@ -40,13 +40,30 @@ short-form version.
 
 ## What still needs to be done
 
-### Before AMD spinup — UX credibility (in flight)
+### Before AMD spinup — UX credibility
 - [x] Source-data ingest panel (lines/tokens/points/deploys counts)
 - [x] Per-agent scope badges on each AgentCard
 - [x] Realistic incident IDs in scenario labels (`PAY-2479` etc.)
 - [x] Spacebar shortcut to fire run + dropdown click-outside-to-close
-- [ ] Click-into AgentDetail slide-over (shows the full input the agent saw + full output + prompt) — proves to a judge that real work happened, biggest single lift for the "is it real" critique
+- [x] One-line specialization per agent + role chip (`specialist · specialist · specialist · synthesizer · operator`) so the multi-agent architecture reads at a glance
+- [x] Visible error banner when the SSE run fails (was silent before)
+- [x] Honest HardwareBadge: "Mock LLM · dev mode" in dev, "Qwen2.5-72B · MI300X" only when really running on AMD
+- [x] SuspectCommitCard surfaces the full deploy detail (author, timestamp, files changed, diff summary) for the commit the agents flagged
+- [ ] Click-into AgentDetail slide-over (full input the agent saw + full output + the prompt). Polish item.
 - [ ] Log-tail animation during ingestion (cosmetic, sells the live feel)
+
+### "Does this look fabricated?" — design decision
+
+**Question:** should we set up a real-looking GitHub repo (`pagerzero-demo/payment-service` with the bad commit actually pushed) so the demo doesn't feel staged?
+
+**Decision: no.** Approach C from the discussion — keep the system self-contained, but make the demo data have the **texture of real ops data** so it reads as authentic. Specifically:
+
+- Author emails (`alice@payco.network`), commit messages, file paths, diff summaries are already in the scenario data and now render in the dashboard via SuspectCommitCard.
+- Incident IDs follow real tracker conventions (`PAY-2479`, `CHK-1138`).
+- The commands in the Remediation panel are real `kubectl` / `git` invocations, not pseudo-code.
+- All times, severities, and confidence numbers are consistent across the agent outputs.
+
+A fake live GitHub repo would add ~half a day of work and one more thing that can break on stage. The texture-of-real-data approach gets 90% of the credibility for ~5% of the work. If a judge asks "is this real data?", the honest answer is: "synthetic incidents we generated to make the demo deterministic — the agent code, the LangGraph orchestration, and the AMD compute path are all real."
 
 ### When you spin up the AMD instance
 1. **Provision** — sign in to AMD Developer Cloud, spin up an MI300X instance, note the public IP and SSH key path.

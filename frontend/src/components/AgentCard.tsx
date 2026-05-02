@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import {
   AGENT_DESCRIPTION,
   AGENT_LABEL,
+  AGENT_ROLE,
   type AgentName,
 } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -56,12 +57,13 @@ export function AgentCard({
             <span className="font-mono text-[10px] uppercase tracking-wider text-text-tertiary">
               agent {String(index + 1).padStart(2, "0")}
             </span>
+            <RolePill role={AGENT_ROLE[name]} />
             <StatePill status={state.status} />
           </div>
           <h3 className="mt-2 truncate text-[14px] font-semibold tracking-tight text-text-primary">
             {AGENT_LABEL[name]}
           </h3>
-          <p className="mt-1 text-[12px] leading-relaxed text-text-tertiary">
+          <p className="mt-1.5 text-[12px] leading-snug text-text-secondary">
             {AGENT_DESCRIPTION[name]}
           </p>
         </div>
@@ -90,6 +92,19 @@ export function AgentCard({
         </span>
       </div>
     </motion.div>
+  );
+}
+
+function RolePill({ role }: { role: string }) {
+  return (
+    <span
+      className={cn(
+        "rounded-[3px] border border-line/70 bg-surface-0/40 px-1.5 py-0.5",
+        "font-mono text-[9px] uppercase tracking-wider text-text-secondary",
+      )}
+    >
+      {role}
+    </span>
   );
 }
 

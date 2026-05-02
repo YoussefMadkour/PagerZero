@@ -7,6 +7,7 @@ import {
   type AgentName,
   type AgentScope,
   API_BASE,
+  type DeploymentPreview,
   type FinalState,
   type IncidentEvent,
   type PipelineStartedEvent,
@@ -31,6 +32,7 @@ export type IncidentRunState = {
   serviceName: string | null;
   alertSummary: string | null;
   sourceData: SourceData | null;
+  deploymentsPreview: DeploymentPreview[];
   startedAt: number | null;
   endedAt: number | null;
   agents: Record<AgentName, AgentRunState>;
@@ -61,6 +63,7 @@ const initialState: IncidentRunState = {
   serviceName: null,
   alertSummary: null,
   sourceData: null,
+  deploymentsPreview: [],
   startedAt: null,
   endedAt: null,
   agents: freshAgents(),
@@ -125,6 +128,7 @@ export function useIncidentRun() {
           serviceName: data.service_name,
           alertSummary: data.alert_summary,
           sourceData: data.source_data,
+          deploymentsPreview: data.deployments_preview,
         }));
       });
 

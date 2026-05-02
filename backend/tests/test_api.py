@@ -29,7 +29,9 @@ async def client():
 async def test_health(client: httpx.AsyncClient) -> None:
     r = await client.get("/api/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["llm_backend"] in ("mock", "vllm")
 
 
 async def test_list_scenarios(client: httpx.AsyncClient) -> None:
@@ -110,6 +112,17 @@ async def test_stream_produces_full_lifecycle(
     assert sd["log_tokens_est"] > 0
     assert sd["metric_points"] > 0
     assert sd["deployments"] > 0
+
+    # deployments_preview ships every deploy with full author/files/diff so
+    # the dashboard can render real-looking commit detail.
+    preview = started_payload["deployments_preview"]
+    assert len(preview) == sd["deployments"]
+    for dep in preview:
+        assert dep["commit_sha"]
+        assert dep["author"]
+        assert dep["message"]
+        assert isinstance(dep["files_changed"], list)
+        assert dep["diff_summary"]
 
     # Each agent_started event carries a scope so the AgentCard can show
     # what that agent is reading before it finishes.

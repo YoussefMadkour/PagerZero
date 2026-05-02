@@ -36,6 +36,27 @@ def _serialize(value: Any) -> Any:
     return value
 
 
+def _deployment_preview(incident: IncidentInput) -> list[dict[str, Any]]:
+    """Compact view of every deploy the agents will see.
+
+    The dashboard joins this against `deployment_correlation.most_likely_culprit`
+    to render the actual author/files/diff for the flagged commit — proves
+    to a judge that the agent inspected real-looking deploy data, not just
+    a SHA string.
+    """
+    return [
+        {
+            "commit_sha": d.commit_sha,
+            "timestamp": d.timestamp.isoformat(),
+            "author": d.author,
+            "message": d.message,
+            "files_changed": d.files_changed,
+            "diff_summary": d.diff_summary,
+        }
+        for d in incident.deployments
+    ]
+
+
 def _summarize_source_data(incident: IncidentInput) -> dict[str, Any]:
     """Quantitative summary of what's being fed into the pipeline.
 
@@ -142,6 +163,7 @@ async def stream_incident_events(
             "alert_summary": incident_input.alert_summary,
             "agents": list(ALL_AGENTS),
             "source_data": _summarize_source_data(incident_input),
+            "deployments_preview": _deployment_preview(incident_input),
         },
     )
 

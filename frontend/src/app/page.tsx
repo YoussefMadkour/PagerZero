@@ -1,8 +1,14 @@
 "use client";
 
+import { AlertOctagon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { AGENT_ORDER, fetchScenarios, type ScenarioMeta } from "@/lib/api";
+import {
+  AGENT_ORDER,
+  fetchHealth,
+  fetchScenarios,
+  type ScenarioMeta,
+} from "@/lib/api";
 import { useIncidentRun } from "@/lib/useIncidentRun";
 
 import { AgentCard } from "@/components/AgentCard";
@@ -13,6 +19,7 @@ import { RemediationPanel } from "@/components/RemediationPanel";
 import { RootCausePanel } from "@/components/RootCausePanel";
 import { ScenarioPicker } from "@/components/ScenarioPicker";
 import { SourceDataPanel } from "@/components/SourceDataPanel";
+import { SuspectCommitCard } from "@/components/SuspectCommitCard";
 
 const DEFAULT_SCENARIO = "scenario_a_memory_leak";
 
@@ -20,9 +27,13 @@ export default function DashboardPage() {
   const [scenarios, setScenarios] = useState<ScenarioMeta[]>([]);
   const [selected, setSelected] = useState<string>(DEFAULT_SCENARIO);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [llmBackend, setLlmBackend] = useState<string | null>(null);
   const { state, run, reset } = useIncidentRun();
 
   useEffect(() => {
+    fetchHealth()
+      .then((h) => setLlmBackend(h.llm_backend))
+      .catch(() => setLlmBackend(null));
     fetchScenarios()
       .then((s) => {
         setScenarios(s);
@@ -59,7 +70,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <Header runState={state} />
+      <Header runState={state} llmBackend={llmBackend} />
 
       <main className="flex-1 pz-grid-bg">
         <div className="mx-auto w-full max-w-[1400px] px-6 py-8">
@@ -87,10 +98,30 @@ export default function DashboardPage() {
             <div className="mt-4 rounded-[var(--r-md)] border border-state-error-line bg-[color:var(--state-error-dim)] px-4 py-3 text-[13px] text-state-error">
               Backend unreachable at <code>/api/scenarios</code>: {loadError}.
               Start it with{" "}
-              <code className="font-mono">
-                uv run uvicorn pagerzero.api.main:app --port 8000
-              </code>
-              .
+              <code className="font-mono">./scripts/dev.sh</code>.
+            </div>
+          )}
+
+          {state.phase === "error" && state.errorMessage && (
+            <div className="mt-4 flex items-start gap-3 rounded-[var(--r-md)] border border-state-error-line bg-[color:var(--state-error-dim)] px-4 py-3">
+              <AlertOctagon className="mt-0.5 h-4 w-4 shrink-0 text-state-error" />
+              <div className="flex-1 text-[13px]">
+                <div className="font-mono text-[11px] uppercase tracking-wider text-state-error">
+                  run failed
+                </div>
+                <p className="mt-1 text-text-primary">{state.errorMessage}</p>
+                <p className="mt-1 text-[12px] text-text-tertiary">
+                  Most common cause: backend isn&apos;t running. Boot both
+                  servers with <code className="font-mono">./scripts/dev.sh</code>.
+                </p>
+              </div>
+              <button
+                onClick={reset}
+                aria-label="Dismiss"
+                className="rounded p-1 text-text-tertiary hover:text-text-primary"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           )}
 
@@ -116,6 +147,10 @@ export default function DashboardPage() {
           <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr,1fr]">
             <div className="space-y-6">
               <RootCausePanel output={state.finalState?.root_cause ?? null} />
+              <SuspectCommitCard
+                rootCause={state.finalState?.root_cause ?? null}
+                deployments={state.deploymentsPreview}
+              />
               <RemediationPanel
                 output={state.finalState?.remediation ?? null}
               />

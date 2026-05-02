@@ -32,12 +32,31 @@ export const AGENT_LABEL: Record<AgentName, string> = {
   remediation: "Remediation",
 };
 
+/** One-line specialization per agent — names the role + the specific job
+ * it does. This is the visible difference between a specialist-agent
+ * architecture and a single prompt chain. Surfaced on every AgentCard. */
 export const AGENT_DESCRIPTION: Record<AgentName, string> = {
-  log_analysis: "Anomaly clusters across the full log stream",
-  metrics_correlator: "Inflection points and leading indicators",
-  deployment_tracker: "Recent deploys ranked by correlation",
-  root_cause: "Synthesizes all three signal streams",
-  remediation: "Commands, rollback, and incident report",
+  log_analysis:
+    "Log specialist — anomaly clustering across the full log stream.",
+  metrics_correlator:
+    "Metrics specialist — separates leading from lagging indicators.",
+  deployment_tracker:
+    "Deploy specialist — correlates code changes to the incident timeline.",
+  root_cause:
+    "Synthesizer — ranks hypotheses using evidence from all three sources.",
+  remediation:
+    "Operator — produces specific commands, rollback steps, and a report.",
+};
+
+/** Architectural role tag — short label rendered as a chip on each card,
+ * so the row reads "specialist · specialist · specialist · synthesizer ·
+ * operator" left-to-right at a glance. */
+export const AGENT_ROLE: Record<AgentName, string> = {
+  log_analysis: "specialist",
+  metrics_correlator: "specialist",
+  deployment_tracker: "specialist",
+  root_cause: "synthesizer",
+  remediation: "operator",
 };
 
 export type ScenarioMeta = {
@@ -174,6 +193,18 @@ export type SourceData = {
   deploys_window_minutes: number;
 };
 
+/** Compact view of the deploy data the agents are reading — joined against
+ * deployment_correlation.most_likely_culprit by commit_sha to render the
+ * actual author / files / diff in the dashboard. */
+export type DeploymentPreview = {
+  commit_sha: string;
+  timestamp: string;
+  author: string;
+  message: string;
+  files_changed: string[];
+  diff_summary: string;
+};
+
 export type AgentScope = {
   primary: string;
   secondary: string;
@@ -188,6 +219,7 @@ export type PipelineStartedEvent = {
     alert_summary: string;
     agents: AgentName[];
     source_data: SourceData;
+    deployments_preview: DeploymentPreview[];
   };
 };
 
@@ -221,5 +253,16 @@ export type IncidentEvent =
 export async function fetchScenarios(): Promise<ScenarioMeta[]> {
   const r = await fetch(`${API_BASE}/api/scenarios`, { cache: "no-store" });
   if (!r.ok) throw new Error(`Failed to load scenarios: ${r.status}`);
+  return r.json();
+}
+
+export type HealthInfo = {
+  status: string;
+  llm_backend: "mock" | "vllm" | string;
+};
+
+export async function fetchHealth(): Promise<HealthInfo> {
+  const r = await fetch(`${API_BASE}/api/health`, { cache: "no-store" });
+  if (!r.ok) throw new Error(`Backend health check failed: ${r.status}`);
   return r.json();
 }
