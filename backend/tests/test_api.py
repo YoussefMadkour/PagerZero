@@ -100,10 +100,24 @@ async def test_stream_produces_full_lifecycle(
     assert started == expected
     assert completed == expected
 
-    # The pipeline_started event names the scenario and the agents
+    # The pipeline_started event names the scenario, the agents, and the
+    # quantitative source-data ingest summary the dashboard renders.
     started_payload = next(d for e, d in events if e == "pipeline_started")
     assert started_payload["scenario"] == scenario
     assert set(started_payload["agents"]) == expected
+    sd = started_payload["source_data"]
+    assert sd["log_lines"] > 1000, "expected non-trivial log volume"
+    assert sd["log_tokens_est"] > 0
+    assert sd["metric_points"] > 0
+    assert sd["deployments"] > 0
+
+    # Each agent_started event carries a scope so the AgentCard can show
+    # what that agent is reading before it finishes.
+    for ev, data in events:
+        if ev == "agent_started":
+            assert "scope" in data
+            assert data["scope"]["primary"]
+            assert data["scope"]["secondary"]
 
     # The completed event payload contains the final state with all 5 outputs
     final_payload = next(d for e, d in events if e == "pipeline_completed")

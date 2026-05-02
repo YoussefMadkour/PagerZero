@@ -46,6 +46,36 @@ export type ScenarioMeta = {
   alert_summary: string;
 };
 
+/* Demo presentation labels — each scenario gets an incident-tracker-style
+ * code (PAY-2479, etc.) and a short title. These render in place of the
+ * raw scenario id and frame the demos as real-looking incidents. */
+export const SCENARIO_PRESENTATION: Record<
+  string,
+  { code: string; title: string }
+> = {
+  scenario_a_memory_leak: {
+    code: "PAY-2479",
+    title: "Payment service heap exhaustion",
+  },
+  scenario_b_pool_exhaust: {
+    code: "CHK-1138",
+    title: "Checkout pool saturation",
+  },
+  scenario_c_cascade: {
+    code: "STF-3041",
+    title: "Storefront cascade outage",
+  },
+};
+
+export function presentScenario(id: string): { code: string; title: string } {
+  return (
+    SCENARIO_PRESENTATION[id] ?? {
+      code: id.toUpperCase().slice(0, 8),
+      title: id,
+    }
+  );
+}
+
 export type AnomalyPattern = {
   pattern: string;
   first_seen: string;
@@ -134,6 +164,21 @@ export type FinalState = {
 
 /* SSE event payloads */
 
+export type SourceData = {
+  log_lines: number;
+  log_chars: number;
+  log_tokens_est: number;
+  metric_points: number;
+  metric_span_minutes: number;
+  deployments: number;
+  deploys_window_minutes: number;
+};
+
+export type AgentScope = {
+  primary: string;
+  secondary: string;
+};
+
 export type PipelineStartedEvent = {
   type: "pipeline_started";
   data: {
@@ -142,12 +187,13 @@ export type PipelineStartedEvent = {
     service_name: string;
     alert_summary: string;
     agents: AgentName[];
+    source_data: SourceData;
   };
 };
 
 export type AgentStartedEvent = {
   type: "agent_started";
-  data: { agent: AgentName };
+  data: { agent: AgentName; scope: AgentScope };
 };
 
 export type AgentCompletedEvent = {

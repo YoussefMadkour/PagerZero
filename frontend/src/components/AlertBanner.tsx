@@ -3,6 +3,7 @@
 import { AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { presentScenario } from "@/lib/api";
 import type { IncidentRunState } from "@/lib/useIncidentRun";
 
 /**
@@ -26,6 +27,10 @@ export function AlertBanner({ runState }: { runState: IncidentRunState }) {
     );
   }
 
+  const presentation = runState.scenario
+    ? presentScenario(runState.scenario)
+    : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -6 }}
@@ -36,19 +41,30 @@ export function AlertBanner({ runState }: { runState: IncidentRunState }) {
       <div className="flex items-start gap-3 p-4">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-state-error" />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider">
             <span className="font-mono font-medium text-state-error">
               alert
             </span>
             <span className="text-text-tertiary">·</span>
+            {presentation && (
+              <>
+                <span className="font-mono text-text-primary">
+                  {presentation.code}
+                </span>
+                <span className="text-text-tertiary">·</span>
+              </>
+            )}
             <span className="font-mono text-text-tertiary">
-              {runState.incidentId ?? "—"}
+              run {runState.incidentId ?? "—"}
             </span>
           </div>
           <h2 className="mt-1 text-[15px] font-semibold tracking-tight text-text-primary">
-            {runState.serviceName}
+            {presentation ? presentation.title : runState.serviceName}
           </h2>
           <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">
+            <span className="font-mono text-text-tertiary">
+              {runState.serviceName} ·{" "}
+            </span>
             {runState.alertSummary}
           </p>
         </div>

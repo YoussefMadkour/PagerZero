@@ -66,8 +66,9 @@ def generate_scenario_a() -> None:
         burst_offset_min = (t - burst_start).total_seconds() / 60
         in_burst = 0 <= burst_offset_min < 15
 
-        # Normal request traffic — denser pre-burst, sparser during the storm
-        normal_per_min = 30 if in_burst else 55
+        # Sized so a full incident's logs fit comfortably inside Qwen's 128k
+        # context (under ~100k tokens at ~5 chars/token for structured logs).
+        normal_per_min = 14 if in_burst else 24
         for _ in range(normal_per_min):
             ts = t + timedelta(seconds=random.uniform(0, 60))
             route = random.choice(routes)
@@ -94,7 +95,7 @@ def generate_scenario_a() -> None:
 
         # OOM burst: heap-exhaustion errors + upstream timeouts
         if in_burst:
-            burst_count = random.randint(35, 55)
+            burst_count = random.randint(16, 28)
             for _ in range(burst_count):
                 ts = t + timedelta(seconds=random.uniform(0, 60))
                 kind = random.random()
@@ -245,7 +246,8 @@ def generate_scenario_b() -> None:
         burst_offset_min = (t - burst_start).total_seconds() / 60
         in_burst = burst_offset_min >= 0
         traffic_multiplier = 3.4 if in_burst else 1.0
-        normal_per_min = int(40 * traffic_multiplier)
+        # Sized to fit a full Qwen 128k context window comfortably.
+        normal_per_min = int(22 * traffic_multiplier)
 
         for _ in range(normal_per_min):
             ts = t + timedelta(seconds=random.uniform(0, 60))
@@ -376,10 +378,11 @@ def generate_scenario_c() -> None:
 
     t = incident_window_start
     end = cascade_time + timedelta(minutes=20)
+    # Sized so the full cascade fits comfortably inside Qwen's 128k context.
     while t < end:
         # Phase 1: pre-config baseline
         if t < config_change_time:
-            for _ in range(40):
+            for _ in range(22):
                 ts = t + timedelta(seconds=random.uniform(0, 60))
                 lines.append(
                     f"{iso(ts)} INFO  [product-svc] GET /products "
@@ -389,7 +392,7 @@ def generate_scenario_c() -> None:
 
         # Phase 2: config change ambient + recommendation slowdown begins
         elif t < cascade_time:
-            for _ in range(35):
+            for _ in range(20):
                 ts = t + timedelta(seconds=random.uniform(0, 60))
                 lines.append(
                     f"{iso(ts)} INFO  [product-svc] GET /products "
@@ -397,7 +400,7 @@ def generate_scenario_c() -> None:
                     f"latency={random.randint(60, 150)}ms"
                 )
             if t >= rec_slowdown_time:
-                for _ in range(15):
+                for _ in range(10):
                     ts = t + timedelta(seconds=random.uniform(0, 60))
                     lines.append(
                         f"{iso(ts)} WARN  [rec-svc] slow response "
@@ -408,7 +411,7 @@ def generate_scenario_c() -> None:
         # Phase 3: cascade — retry storm in product-svc, thread pool exhaustion
         else:
             cascade_min = (t - cascade_time).total_seconds() / 60
-            for _ in range(int(80 + cascade_min * 5)):
+            for _ in range(int(45 + cascade_min * 3)):
                 ts = t + timedelta(seconds=random.uniform(0, 60))
                 kind = random.random()
                 if kind < 0.4:

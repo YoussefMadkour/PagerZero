@@ -5,10 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AGENT_ORDER,
   type AgentName,
+  type AgentScope,
   API_BASE,
   type FinalState,
   type IncidentEvent,
   type PipelineStartedEvent,
+  type SourceData,
 } from "./api";
 
 export type AgentStatus = "pending" | "running" | "done" | "error";
@@ -18,6 +20,7 @@ export type AgentRunState = {
   startedAt: number | null;
   endedAt: number | null;
   output: Record<string, unknown> | null;
+  scope: AgentScope | null;
 };
 
 export type IncidentRunState = {
@@ -27,6 +30,7 @@ export type IncidentRunState = {
   incidentId: string | null;
   serviceName: string | null;
   alertSummary: string | null;
+  sourceData: SourceData | null;
   startedAt: number | null;
   endedAt: number | null;
   agents: Record<AgentName, AgentRunState>;
@@ -34,18 +38,21 @@ export type IncidentRunState = {
   errorMessage: string | null;
 };
 
-const initialAgents: Record<AgentName, AgentRunState> = AGENT_ORDER.reduce(
-  (acc, name) => {
-    acc[name] = {
-      status: "pending",
-      startedAt: null,
-      endedAt: null,
-      output: null,
-    };
-    return acc;
-  },
-  {} as Record<AgentName, AgentRunState>,
-);
+function freshAgents(): Record<AgentName, AgentRunState> {
+  return AGENT_ORDER.reduce(
+    (acc, name) => {
+      acc[name] = {
+        status: "pending",
+        startedAt: null,
+        endedAt: null,
+        output: null,
+        scope: null,
+      };
+      return acc;
+    },
+    {} as Record<AgentName, AgentRunState>,
+  );
+}
 
 const initialState: IncidentRunState = {
   phase: "idle",
@@ -53,9 +60,10 @@ const initialState: IncidentRunState = {
   incidentId: null,
   serviceName: null,
   alertSummary: null,
+  sourceData: null,
   startedAt: null,
   endedAt: null,
-  agents: initialAgents,
+  agents: freshAgents(),
   finalState: null,
   errorMessage: null,
 };
@@ -89,18 +97,7 @@ export function useIncidentRun() {
         phase: "running",
         scenario,
         startedAt: performance.now(),
-        agents: AGENT_ORDER.reduce(
-          (acc, n) => {
-            acc[n] = {
-              status: "pending",
-              startedAt: null,
-              endedAt: null,
-              output: null,
-            };
-            return acc;
-          },
-          {} as Record<AgentName, AgentRunState>,
-        ),
+        agents: freshAgents(),
       });
 
       const url = `${API_BASE}/api/incidents/stream?scenario=${encodeURIComponent(scenario)}`;
@@ -127,25 +124,27 @@ export function useIncidentRun() {
           incidentId: data.incident_id,
           serviceName: data.service_name,
           alertSummary: data.alert_summary,
+          sourceData: data.source_data,
         }));
       });
 
-      handleTyped<{ type: "agent_started"; data: { agent: AgentName } }>(
-        "agent_started",
-        (data) => {
-          setState((s) => ({
-            ...s,
-            agents: {
-              ...s.agents,
-              [data.agent]: {
-                ...s.agents[data.agent],
-                status: "running",
-                startedAt: performance.now(),
-              },
+      handleTyped<{
+        type: "agent_started";
+        data: { agent: AgentName; scope: AgentScope };
+      }>("agent_started", (data) => {
+        setState((s) => ({
+          ...s,
+          agents: {
+            ...s.agents,
+            [data.agent]: {
+              ...s.agents[data.agent],
+              status: "running",
+              startedAt: performance.now(),
+              scope: data.scope,
             },
-          }));
-        },
-      );
+          },
+        }));
+      });
 
       handleTyped<{
         type: "agent_completed";

@@ -12,6 +12,7 @@ import { ParallelTimingChart } from "@/components/ParallelTimingChart";
 import { RemediationPanel } from "@/components/RemediationPanel";
 import { RootCausePanel } from "@/components/RootCausePanel";
 import { ScenarioPicker } from "@/components/ScenarioPicker";
+import { SourceDataPanel } from "@/components/SourceDataPanel";
 
 const DEFAULT_SCENARIO = "scenario_a_memory_leak";
 
@@ -31,6 +32,30 @@ export default function DashboardPage() {
       })
       .catch((err) => setLoadError(err.message));
   }, []);
+
+  // Spacebar fires the run when not already running, so the demo can be
+  // driven hands-free during a pitch.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      const target = e.target as HTMLElement | null;
+      // Don't hijack space when the user is typing in an input.
+      if (
+        target &&
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+      )
+        return;
+      if (state.phase === "running" || !selected) return;
+      e.preventDefault();
+      if (state.phase === "completed" || state.phase === "error") {
+        reset();
+      } else {
+        run(selected);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [state.phase, selected, run, reset]);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -69,8 +94,12 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="mt-6">
+          <div className="mt-6 space-y-3">
             <AlertBanner runState={state} />
+            <SourceDataPanel
+              source={state.sourceData}
+              serviceName={state.serviceName}
+            />
           </div>
 
           <section className="mt-6 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">

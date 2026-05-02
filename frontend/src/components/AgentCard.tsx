@@ -68,6 +68,17 @@ export function AgentCard({
         <StatusIcon status={state.status} />
       </div>
 
+      {state.scope && (
+        <div className="mt-3 rounded-[3px] border border-line/70 bg-surface-0/40 px-2.5 py-1.5">
+          <div className="font-mono text-[11px] tabular-nums text-text-secondary">
+            {state.scope.primary}
+          </div>
+          <div className="font-mono text-[10px] text-text-tertiary">
+            {state.scope.secondary}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 flex items-center justify-between border-t border-line/50 pt-3 text-[11px] text-text-tertiary">
         <span className="font-mono">{STATE_COPY[state.status]}</span>
         <span className="font-mono tabular-nums">
