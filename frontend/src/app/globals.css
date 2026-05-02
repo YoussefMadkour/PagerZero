@@ -1,26 +1,135 @@
 @import "tailwindcss";
 
+/*
+ * PagerZero design tokens.
+ *
+ * Reference points: Linear, Datadog, Sentry. Information-dense ops UI, not
+ * a chatbot. Sharp corners, tight typography, monochrome with one accent.
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surface elevations — near-black, not pure black */
+  --surface-0: #0a0a0b;   /* page background */
+  --surface-1: #111114;   /* card */
+  --surface-2: #16161a;   /* elevated card */
+  --surface-3: #1c1c21;   /* hover/active */
+
+  /* Hairlines */
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-disabled: #52525b;
+
+  /* State accents — single-accent design.
+   * amber = running / live / alert
+   * emerald = done / healthy
+   * rose = error / critical
+   * zinc = pending / inert */
+  --state-running: #f59e0b;
+  --state-running-dim: rgba(245, 158, 11, 0.12);
+  --state-running-line: rgba(245, 158, 11, 0.28);
+
+  --state-done: #10b981;
+  --state-done-dim: rgba(16, 185, 129, 0.10);
+  --state-done-line: rgba(16, 185, 129, 0.24);
+
+  --state-error: #f43f5e;
+  --state-error-dim: rgba(244, 63, 94, 0.12);
+  --state-error-line: rgba(244, 63, 94, 0.28);
+
+  --state-pending: #52525b;
+  --state-pending-dim: rgba(82, 82, 91, 0.18);
+
+  /* Radius — sharp, not playful */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--surface-0);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Expose tokens to Tailwind utility classes */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  --color-state-running: var(--state-running);
+  --color-state-done: var(--state-done);
+  --color-state-error: var(--state-error);
+  --color-state-pending: var(--state-pending);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-feature-settings: "ss01", "ss02", "cv01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+}
+
+/* Scrollbar — barely-there */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Pulse for running state */
+@keyframes pz-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.pz-pulse {
+  animation: pz-pulse 1.6s ease-in-out infinite;
+}
+
+/* Subtle grid on dashboard backdrop */
+.pz-grid-bg {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+
+/* Selection */
+::selection {
+  background: var(--state-running-dim);
+  color: var(--state-running);
 }
