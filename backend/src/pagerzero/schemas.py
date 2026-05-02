@@ -136,10 +136,12 @@ AgentStatus = Literal["pending", "running", "done", "error"]
 
 
 class IncidentState(BaseModel):
-    """The shared state that flows through the LangGraph pipeline.
+    """Shared state flowing through the LangGraph pipeline.
 
-    Each parallel branch writes to its own field; reducers are unnecessary
-    because the fields don't overlap.
+    Each parallel branch writes to its own output field, so no reducers are
+    needed — fields don't overlap. Per-agent UI status is **not** tracked
+    here; the SSE endpoint derives it from LangGraph's `astream_events`
+    (see ADR 0001).
     """
 
     incident_id: str
@@ -149,13 +151,4 @@ class IncidentState(BaseModel):
     deployment_correlation: DeploymentOutput | None = None
     root_cause: RootCauseOutput | None = None
     remediation: RemediationOutput | None = None
-    agent_status: dict[AgentName, AgentStatus] = Field(
-        default_factory=lambda: {
-            "log_analysis": "pending",
-            "metrics_correlator": "pending",
-            "deployment_tracker": "pending",
-            "root_cause": "pending",
-            "remediation": "pending",
-        }
-    )
     error: str | None = None
