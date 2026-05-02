@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2026-05-01T14:32:00Z",
+    "commit_sha": "f4e8a91",
+    "author": "frank@payco.network",
+    "message": "Disable circuit breaker on product->rec calls (temp)",
+    "files_changed": [
+      "config/resilience.yaml"
+    ],
+    "diff_summary": "circuit_breaker.product_to_rec: enabled=false. Temporary while debugging unrelated rec-svc latency."
+  },
+  {
+    "timestamp": "2026-05-01T10:00:00Z",
+    "commit_sha": "2a9c5d3",
+    "author": "grace@payco.network",
+    "message": "Add /products/featured endpoint",
+    "files_changed": [
+      "src/com/payco/product/FeaturedHandler.java"
+    ],
+    "diff_summary": "New endpoint with its own dedicated thread pool. Isolated."
+  }
+]

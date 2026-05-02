@@ -32,9 +32,15 @@ async def test_graph_runs_three_agents_on_scenario_a() -> None:
     assert result["deployment_correlation"].most_likely_culprit.commit_sha == "abc123f"
 
 
-async def test_three_agents_run_in_parallel_not_sequentially() -> None:
-    """If the three branches were sequential, total wall-time would be ~3x the
-    per-call latency. Parallel execution should be ~1x.
+async def test_first_three_agents_run_in_parallel_not_sequentially() -> None:
+    """The graph runs 5 agents: 3 parallel, then root_cause, then remediation.
+
+    With per-call latency `t`:
+      - fully sequential 5 agents => 5t
+      - parallel-first-three      => 3t (parallel branch + 2 sequential)
+
+    The threshold below cleanly distinguishes the two without flaking on
+    LangGraph overhead.
     """
     incident = load_scenario("scenario_a_memory_leak")
     state = IncidentState(incident_id="inc_parallel", input=incident)
@@ -46,9 +52,13 @@ async def test_three_agents_run_in_parallel_not_sequentially() -> None:
     await graph.ainvoke(state)
     elapsed = time.perf_counter() - start
 
-    # Sequential would be ~0.9s; parallel should be ~0.3s plus a small overhead.
-    # Use 0.6s as the threshold so we have margin against CI jitter.
-    assert elapsed < 0.6, f"agents appear to be sequential (took {elapsed:.2f}s)"
+    sequential_total = 5 * per_call_latency
+    parallel_expected = 3 * per_call_latency
+    threshold = (sequential_total + parallel_expected) / 2  # halfway = 1.2s
+    assert elapsed < threshold, (
+        f"first three agents appear to be sequential (took {elapsed:.2f}s, "
+        f"expected ~{parallel_expected:.2f}s, sequential would be {sequential_total:.2f}s)"
+    )
 
 
 async def test_graph_streams_per_node_lifecycle_events() -> None:

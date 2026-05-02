@@ -1,0 +1,4 @@
+{
+  "service_name": "checkout-service",
+  "alert_summary": "checkout-service connection pool saturated, P99 latency > 8s, traffic 340% above baseline."
+}

@@ -1,0 +1,4 @@
+{
+  "service_name": "storefront",
+  "alert_summary": "storefront fully down, thread pool exhausted across product-service. Multiple downstream services degraded."
+}

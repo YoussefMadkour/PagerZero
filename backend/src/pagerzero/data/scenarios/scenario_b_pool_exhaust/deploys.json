@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2026-05-01T06:00:00Z",
+    "commit_sha": "5fa9e22",
+    "author": "dan@payco.network",
+    "message": "Improve checkout error message copy",
+    "files_changed": [
+      "src/com/payco/checkout/Errors.java"
+    ],
+    "diff_summary": "Reword 4 user-facing error messages. No logic."
+  },
+  {
+    "timestamp": "2026-04-30T18:00:00Z",
+    "commit_sha": "1c33ab8",
+    "author": "eve@payco.network",
+    "message": "Update README badges",
+    "files_changed": [
+      "README.md"
+    ],
+    "diff_summary": "Documentation only."
+  }
+]
